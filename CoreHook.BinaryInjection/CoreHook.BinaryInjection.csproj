@@ -7,6 +7,7 @@
     <Nullable>Enable</Nullable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableImplicitUsings>true</EnableImplicitUsings>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -16,31 +17,29 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CoreHook.IPC\CoreHook.IPC.csproj" />
+    <ProjectReference Include="..\CoreHook.NativeHost\CoreHook.NativeHost.vcxproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>False</Private>
+      <Pack>False</Pack>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
     <!--<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" /-->
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.2-beta" PrivateAssets="All" />
-    <PackageReference Include="NuGetizer" Version="1.2.2" PrivateAssets="All">
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106" PrivateAssets="All" />
+    <PackageReference Include="NuGetizer" Version="1.2.4" PrivateAssets="All">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\CoreHook.NativeHost\bin\$(Configuration)\x86\CoreHook.NativeHost32.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x86\\%(Filename)%(Extension)" Pack="True" />
-    <None Include="..\CoreHook.NativeHost\bin\$(Configuration)\x64\CoreHook.NativeHost64.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x64\\%(Filename)%(Extension)" Pack="True" />
-    <None Include="..\CoreHook.NativeHost\bin\$(Configuration)\x86\nethost.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x86\\%(Filename)%(Extension)" Pack="True" />
-    <None Include="..\CoreHook.NativeHost\bin\$(Configuration)\x64\nethost.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x64\\%(Filename)%(Extension)" Pack="True" />
+    <Content Include="..\CoreHook.NativeHost\bin\$(Configuration)\x86\CoreHook.NativeHost32.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x86\\%(Filename)%(Extension)" Pack="True" PackagePath="native\x86\" />
+    <Content Include="..\CoreHook.NativeHost\bin\$(Configuration)\x64\CoreHook.NativeHost64.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x64\\%(Filename)%(Extension)" Pack="True" PackagePath="native\x64\" />
+    <Content Include="..\CoreHook.NativeHost\bin\$(Configuration)\x86\nethost.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x86\\%(Filename)%(Extension)" Pack="True" PackagePath="native\x86\" />
+    <Content Include="..\CoreHook.NativeHost\bin\$(Configuration)\x64\nethost.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x64\\%(Filename)%(Extension)" Pack="True" PackagePath="native\x64\" />
   </ItemGroup>
-
-  <Target BeforeTargets="Compile" Name="BuildNativeHost" Label="CoreHook.NativeHost Build">
-    <Message Text="Force build CoreHook.NativeHost (x64)" Importance="High" />
-    <MSBuild Projects="..\CoreHook.NativeHost\CoreHook.NativeHost.vcxproj" Properties="Platform=x64" />
-    <Message Text="Force build CoreHook.NativeHost (x86/win32)" Importance="High" />
-    <MSBuild Projects="..\CoreHook.NativeHost\CoreHook.NativeHost.vcxproj" Properties="Platform=Win32" />
-  </Target>
 
 </Project>

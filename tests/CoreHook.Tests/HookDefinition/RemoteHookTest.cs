@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.IO;
 
 using System.Reflection;
-using System.Runtime.Loader;
 using System.Threading;
 
 namespace CoreHook.Tests.HookDefinition;
@@ -32,7 +31,7 @@ public class RemoteHookTest
 
         Assert.True(RemoteHook.InjectDllIntoTarget(testProcess, GetTestDllPath(testHookLibrary), typeof(SimpleParameterTest.EntryPoint).FullName, logger, PipePlatformBase.Instance, remoteArgument));
 
-        Assert.Equal(remoteArgument, ReadFromProcess(testProcess));
+        Assert.Equal(remoteArgument, ReadLineFromProcess(testProcess));
 
         EndProcess(testProcess);
     }
@@ -48,7 +47,7 @@ public class RemoteHookTest
     {
         const string testHookLibrary = "CoreHook.Tests.ComplexParameterTest.dll";
         const string testMessageParameter = "Berner";
-        
+
         var complexParameter = new ComplexParameter
         {
             Message = testMessageParameter,
@@ -61,8 +60,8 @@ public class RemoteHookTest
 
         Assert.True(RemoteHook.InjectDllIntoTarget(testProcess, GetTestDllPath(testHookLibrary), typeof(EntryPoint).FullName, logger, PipePlatformBase.Instance, complexParameter));
 
-        Assert.Equal(complexParameter.Message, ReadFromProcess(testProcess));
-        Assert.Equal(complexParameter.HostProcessId.ToString(), ReadFromProcess(testProcess));
+        Assert.Equal(complexParameter.Message, ReadLineFromProcess(testProcess));
+        Assert.Equal(complexParameter.HostProcessId.ToString(), ReadLineFromProcess(testProcess));
 
         EndProcess(testProcess);
     }
@@ -95,7 +94,7 @@ public class RemoteHookTest
         process?.Kill(true);
     }
 
-    private static string ReadFromProcess(Process target)
+    private static string ReadLineFromProcess(Process target)
     {
         return target.StandardOutput.ReadLine();
     }

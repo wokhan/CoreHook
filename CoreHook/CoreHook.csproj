@@ -48,14 +48,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
-    <PackageReference Include="System.Management" Version="7.0.2" />
-    <PackageReference Include="NuGetizer" Version="1.2.2">
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="9.0.0" />
+    <PackageReference Include="System.Management" Version="9.0.0" />
+    <PackageReference Include="NuGetizer" Version="1.2.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
@@ -67,8 +67,11 @@
   </ItemGroup>
 
   <ItemGroup Label="Additional dependencies to include in the Nuget package">
-    <None Include="Native\corehook32.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x86\\%(Filename)%(Extension)" Pack="True" PackagePath="lib\$(TargetFramework)\x86\" />
-    <None Include="Native\corehook64.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x64\\%(Filename)%(Extension)" Pack="True" PackagePath="lib\$(TargetFramework)\x64\" />
+    <Content Include="Native\corehook32.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x86\%(Filename)%(Extension)" PackagePath="native\x86\" Pack="True" />
+    <Content Include="Native\corehook64.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" TargetPath="x64\%(Filename)%(Extension)" PackagePath="native\x64\" Pack="True" />
+    <None Include="..\CoreHook.Generator\bin\$(Configuration)\netstandard2.0\CoreHook.Generator.dll" Visible="False" CopyToOutputDirectory="PreserveNewest" Pack="True" PackagePath="lib\$(TargetFramework)\" />
+    
+    <Content Include="Wokhan.CoreHook.props" CopyToOutputDirectory="PreserveNewest" Pack="True" PackagePath="build/" />
   </ItemGroup>
 
   <ItemGroup>

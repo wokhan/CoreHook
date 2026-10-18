@@ -207,8 +207,8 @@ public sealed partial class ManagedProcess : IDisposable
         MODULEINFO moduleInfo = GetModuleInfo(moduleHandle);
 
         return PEImage.CreateForProcessModule(SafeHandle, (nint)moduleInfo.lpBaseOfDll)
-                      .GetExportedFunctions()
-                      .FirstOrDefault(entry => entry.Name == function)
+                      .Exports
+                      .FirstOrDefault(entry => entry.MethodName == function)
                       .Address;
     }
 

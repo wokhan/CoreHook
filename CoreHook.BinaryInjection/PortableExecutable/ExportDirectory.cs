@@ -1,36 +1,36 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace CoreHook.BinaryInjection.PortableExecutable;
 
 [StructLayout(LayoutKind.Sequential)]
-internal readonly struct ExportDirectory
+public readonly struct ExportDirectory
 {
-    internal readonly uint Characteristics;
-    internal readonly uint TimeDateStamp;
-    internal readonly ushort MajorVersion;
-    internal readonly ushort MinorVersion;
-    internal readonly uint Name;
-    internal readonly uint Base;
-    internal readonly uint NumberOfFunctions;
-    internal readonly uint NumberOfNames;
-    internal readonly uint AddressOfFunctions;
-    internal readonly uint AddressOfNames;
-    internal readonly uint AddressOfNameOrdinals;
-    
-    //internal unsafe IList<(string? Name, nint Address)> RetrieveFunctions(nint baseAddress)
-    //{
-    //    fixed (byte* t = new byte[NumberOfNames])
+    public readonly uint ExportFlags;
+    public readonly uint TimeDateStamp;
+    public readonly ushort MajorVersion;
+    public readonly ushort MinorVersion;
+    public readonly uint NameRVA;
+    public readonly uint OrdinalBase;
+    public readonly uint AddressTableEntries;
+    public readonly uint NumberOfNamesPointers;
+    public readonly uint ExportAddressTableRVA;
+    public readonly uint NamePointerRVA;
+    public readonly uint OrdinalTableRVA;
 
-    //    var names = new ReadOnlySpan<uint>((void*)(baseAddress + (nint)AddressOfNames), (int)NumberOfNames).ToArray();
-        
-    //    var ordinals = new ReadOnlySpan<ushort>((void*)(baseAddress + (nint)AddressOfNameOrdinals), (int)NumberOfNames).ToArray();
+    internal unsafe readonly IList<(string DllName, string MethodName, nint Address)> GetExportedFunctions(PEReader reader, nint moduleBaseAddress)
+    {
+        var dllName = reader.ReadStringANSI((nint)NameRVA);
 
-    //    var addresses = new ReadOnlySpan<uint>((void*)(baseAddress + (nint)AddressOfFunctions), (int)NumberOfFunctions).ToArray();
+        var namesPointers = reader.ReadArray<uint>((nint)NamePointerRVA, NumberOfNamesPointers);
+        var ordinals = reader.ReadArray<ushort>((nint)OrdinalTableRVA, NumberOfNamesPointers);
+        var addresses = reader.ReadArray<uint>((nint)ExportAddressTableRVA, AddressTableEntries);
 
-    //    var ret = names.Zip(ordinals.Select(ordinal => addresses[ordinal]), (nameAddress, functionAddress) => (Marshal.PtrToStringAnsi(baseAddress + (nint)nameAddress), baseAddress + (nint)functionAddress)).ToList();
-    //    return ret;
-    //}
+        var localOrdinalBase = OrdinalBase;
 
+        //TODO: check if +1 is necessary
+        return namesPointers.Zip(ordinals.Select(ordinal => addresses[ordinal - localOrdinalBase + 1]), (nameAddress, functionAddress) => (dllName, reader.ReadStringANSI((nint)nameAddress), moduleBaseAddress + (nint)functionAddress))
+                            .ToList();
+    }
 }

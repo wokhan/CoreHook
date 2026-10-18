@@ -67,11 +67,12 @@ public static class RemoteHook
             UwpSecurityHelper.GrantAllAppPackagesAccessToFile(corehookPath);
         }
 
-        var coreLoadPath = Assembly.GetExecutingAssembly().Location;
-
+        // Inject the native corehook libraries based on Microsoft Detours
         using var injector = new RemoteInjector(targetProcess, pipePlatform ?? IPipePlatform.Default, injectionPipeName, loggerFactory);
         injector.InjectLibraries(corehookPath);
 
+        // CoreHook lib (this project) will now inject itself as it's also acting as a loader
+        var coreLoadPath = Assembly.GetExecutingAssembly().Location;
         var args = new ManagedRemoteInfo(Environment.ProcessId, injectionPipeName, Path.GetFullPath(hookLibrary), hookType, nameof(HookBase.Run), parameters);
         return injector.InjectManaged(coreLoadPath, null, args);
     }

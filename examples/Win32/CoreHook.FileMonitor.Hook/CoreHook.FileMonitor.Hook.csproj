@@ -10,9 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\CoreHook\CoreHook.csproj" />
-    <ProjectReference Include="..\..\..\CoreHook.IPC\CoreHook.IPC.csproj" />
     <ProjectReference Include="..\..\..\CoreHook.Generator\CoreHook.Generator.csproj" OutputItemType="Analyzer" />
-    
   </ItemGroup>
 
   <!--

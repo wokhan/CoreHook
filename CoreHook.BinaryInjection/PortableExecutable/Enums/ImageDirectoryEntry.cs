@@ -1,7 +1,7 @@
 ﻿
 namespace CoreHook.BinaryInjection.PortableExecutable;
 
-internal enum ImageDirectoryEntry : ushort
+public enum ImageDirectoryEntry : ushort
 {
     ImageDirectoryEntryExport = 0,
     ImageDirectoryEntryImport,

@@ -53,8 +53,8 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  
-  <PropertyGroup Label="Defaults">
+
+  <PropertyGroup Label="Defaults" Condition="'$(OverwriteOutputPath)'==''">
     <OutDir>bin\$(Configuration)\$(PlatformTarget)\</OutDir>
     <IntDir>obj\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
@@ -189,4 +189,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 
   <ImportGroup Label="ExtensionTargets" />
+
+  <Target Name="Build-x64" AfterTargets="Build">
+    <MSBuild Condition="'$(Platform)'=='Win32'" Projects="$(MSBuildProjectFile)" Properties="Platform=x64" RunEachTargetSeparately="true" />
+  </Target>
+
+  <Target Name="Build-x86" AfterTargets="Build">
+    <MSBuild Condition=" '$(Platform)'=='x64' " Projects="$(MSBuildProjectFile)" Properties="Platform=Win32" RunEachTargetSeparately="true" />
+  </Target>
+  
 </Project>

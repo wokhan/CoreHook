@@ -1,96 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 
-using Windows.Win32;
-
 namespace CoreHook.BinaryInjection.PortableExecutable;
+
 public class PEImage
 {
-    private SafeHandle SafeHandle;
-    private nint baseAddress;
+    private readonly PEReader reader;
 
-    private ExportDirectory exportDirectory;
+    private readonly nint moduleBaseAddress;
 
-    public static PEImage CreateForProcessModule(SafeHandle handle, nint moduleBaseAddress)
+    public DosHeader dosHeaders;
+    public NtHeaders ntHeaders;
+
+    public IList<(string DllName, string MethodName, nint Address)> Exports;
+    public IList<(string DllName, string MethodName, nint Address)> Imports;
+
+    private bool is64bits;
+
+    private PEImage(SafeHandle? processHandle, nint moduleBaseAddress)
     {
-        PEImage ret = new()
-        {
-            SafeHandle = handle,
-            baseAddress = moduleBaseAddress
-        };
+        this.moduleBaseAddress = moduleBaseAddress;
 
-        ret.Init(); 
-        
-        return ret;
+        reader = new PEReader(processHandle, moduleBaseAddress);
+
+        Init();
+    }
+    public static PEImage CreateForProcessModule(nint moduleBaseAddress)
+    {
+        return new PEImage(null, moduleBaseAddress);
+    }
+
+    public static PEImage CreateForProcessModule(SafeHandle? processHandle, nint moduleBaseAddress)
+    {
+        return new PEImage(processHandle, moduleBaseAddress);
     }
 
     private unsafe void Init()
     {
-        // TODO: Trying to use the Unsafe API, but it might cause some issues if alignment is not the same depending on the platform
-        // since no marshalling occurs here. I've to double check that.
-        var dosHeaders = Read<DosHeader>((void*)baseAddress);
+        // TODO: Trying to use the Unsafe API, but it might cause some issues if alignment is not the same depending on the platform since no marshalling occurs here. I've to double check that.
+        dosHeaders = reader.Read<DosHeader>(0);
 
-        var ntHeadersAddress = baseAddress + dosHeaders.e_lfanew;
-        var ntHeaders = Read<NtHeaders>((void*)ntHeadersAddress);
+        ntHeaders = reader.Read<NtHeaders>((nint)dosHeaders.e_lfanew);
 
-        var exportDirectoryAddress = baseAddress + ntHeaders.OptionalHeader.DataDirectory(ImageDirectoryEntry.ImageDirectoryEntryExport).VirtualAddress;
-        exportDirectory = Read<ExportDirectory>((void*)exportDirectoryAddress);
+        is64bits = ntHeaders.OptionalHeader.ImageMagic == PEMagic.PE32Plus;
+
+        var exportDirectory = ntHeaders.OptionalHeader.ResolveDirectory<ExportDirectory>(reader, ImageDirectoryEntry.ImageDirectoryEntryExport);
+        //var importDirectory = ntHeaders.OptionalHeader.ResolveDirectory<ImportDirectory>(reader, ImageDirectoryEntry.ImageDirectoryEntryImport);
+
+        Exports = exportDirectory.GetExportedFunctions(reader, moduleBaseAddress);
+
+        var importDirectoryRVA = ntHeaders.OptionalHeader.DataDirectory(ImageDirectoryEntry.ImageDirectoryEntryImport).VirtualAddress;
+        var importDirectory = reader.ReadArray<ImportDirectory>((nint)importDirectoryRVA, dir => dir.NameRVA == 0);
+
+        Imports = importDirectory.SelectMany(dir => dir.GetImportedFunctions(reader, moduleBaseAddress, is64bits)).ToList();
     }
-
-    public unsafe IList<(string Name, nint Address)> GetExportedFunctions()
-    {
-        var names = new uint[exportDirectory.NumberOfNames];
-        var ordinals = new ushort[exportDirectory.NumberOfNames];
-        var addresses = new uint[exportDirectory.NumberOfFunctions];
-        fixed (uint* namesPtr = names)
-        fixed (ushort* ordinalsPtr = ordinals)
-        fixed (uint* addressesPtr = addresses)
-        {
-            Read((void*)(baseAddress + (nint)exportDirectory.AddressOfNames), namesPtr, exportDirectory.NumberOfNames * sizeof(uint));
-            Read((void*)(baseAddress + (nint)exportDirectory.AddressOfNameOrdinals), ordinalsPtr, exportDirectory.NumberOfNames * sizeof(ushort));
-            Read((void*)(baseAddress + (nint)exportDirectory.AddressOfFunctions), addressesPtr, exportDirectory.NumberOfFunctions * sizeof(uint));
-        }
-
-        return names.Zip(ordinals.Select(ordinal => addresses[ordinal]), (nameAddress, functionAddress) => (ReadString(baseAddress + (nint)nameAddress), baseAddress + (nint)functionAddress))
-                    .ToList();
-    }
-
-    private unsafe string ReadString(nint address)
-    {
-        // We have to copy the memory buffer using marshalling (hance the indirect PtrToStringAnsi call).
-        // Maybe use CopyMemory and release the copied data next?
-        fixed (sbyte* bufferPtr = new sbyte[4096])
-        {
-            Read((void*)address, bufferPtr, 4096);
-            // TODO: Could probably use a ReadOnlySpan here; stopping at the first null char and avoiding additional allocation?
-            return Marshal.PtrToStringAnsi((nint)bufferPtr);
-        }
-    }
-
-    private unsafe T Read<T>(void* address, uint? len = null) where T : new()
-    {
-        var ret = new T();
-        len ??= (uint)sizeof(T);
-
-        var bytesRead = new long();
-        if (!NativeMethods.ReadProcessMemory(SafeHandle, address, &ret, (nuint)len, (nuint*)&bytesRead) || bytesRead != len)
-        {
-            throw new Win32Exception($"Failed to read process memory at {(nuint)address:X16}.");
-        }
-
-        return ret;
-    }
-
-    private unsafe void Read(void* address, void* buffer, uint? len)
-    {
-        var bytesRead = new long();
-        if (!NativeMethods.ReadProcessMemory(SafeHandle, address, buffer, (nuint)len, (nuint*)&bytesRead) || bytesRead != len)
-        {
-            throw new Win32Exception($"Failed to read process memory at {(nuint)address:X16}.");
-        }
-    }
-
 }
