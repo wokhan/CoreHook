@@ -20,14 +20,6 @@ Any contributions are all welcome! If you find any problems or want to add featu
 
 Credits go to the same people @unknownv2 mentioned [here](/CREDITS.md) and also to himself. While I deeply modified (not to say "improved") his code, I wouldn't have been able to do that without his project!
 
-# Donations
-
-Since this project is a fork and all initial credits goes to @unknownv2, please consider donating to the causes he supports.
-
-I kept them here unmodified:
-
-If the project has helped you in any way and you want to give back, consider donating to great organizations such as [Black Girls Code](http://www.blackgirlscode.com/donations.html) and [Hack the Hood](https://www.hackthehood.org/donate.html), or volunteering at others like [The Hidden Genius Project](http://www.hiddengeniusproject.org/upcoming-volunteer-opportunities/). 
-
 ## Features
 
 * Intercept public API functions such as `CreateFile`
